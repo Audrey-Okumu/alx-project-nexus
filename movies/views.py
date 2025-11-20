@@ -60,6 +60,65 @@ def recommended_movies(request, movie_id):
 
     return Response(movies)
 
+
+# Get Movie Details
+@api_view(["GET"])
+def movie_details(request, movie_id):
+    try:
+        # Try to get from database first
+        movie = Movie.objects.filter(tmdb_id=movie_id).first()
+        
+        if not movie:
+            # Fetch from TMDB if not in database
+            data = tmdb.get_movie_details(movie_id)
+            movie, _ = Movie.objects.get_or_create(
+                tmdb_id=data["id"],
+                defaults={
+                    "title": data.get("title"),
+                    "overview": data.get("overview", ""),
+                    "poster_url": data.get("poster_path"),
+                    "release_date": data.get("release_date"),
+                    "genres": [genre["id"] for genre in data.get("genres", [])],
+                }
+            )
+
+        return Response(MovieSerializer(movie).data)
+    
+    except Exception as e:
+        return Response({"error": f"Failed to fetch movie details: {str(e)}"})
+
+# Search Movies
+@api_view(["GET"])
+def search_movies(request):
+    try:
+        query = request.GET.get('query', '').strip()
+        if not query:
+            return Response({"error": "Query parameter is required"})
+
+        data = tmdb.search_movies(query)
+        movies_data = data.get("results", [])
+
+        movies = []
+        for item in movies_data:
+            movie, _ = Movie.objects.get_or_create(
+                tmdb_id=item["id"],
+                defaults={
+                    "title": item.get("title"),
+                    "overview": item.get("overview", ""),
+                    "poster_url": item.get("poster_path"),
+                    "release_date": item.get("release_date"),
+                    "genres": item.get("genre_ids", []),
+                }
+            )
+            movies.append(MovieSerializer(movie).data)
+
+        return Response(movies)
+    
+    except Exception as e:
+        return Response({"error": f"Search failed: {str(e)}"})
+
+
+
 #Add to favorites
 
 @api_view(["POST"])
