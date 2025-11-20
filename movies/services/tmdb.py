@@ -20,13 +20,26 @@ class TMDBClient:
         params['api_key'] = self.api_key
 
         url = f"{self.BASE_URL}{endpoint}"
+        
+        print(f" Making request to {url}")  # Debug log
+        print(f"  API Key exists: {bool(self.api_key)}")  # Debug log
 
-        response = self.session.get(url, params=params)
+        try:
+            response = self.session.get(url, params=params, timeout=30)
+            print(f"Response status: {response.status_code}")  # Debug log
 
-        if response.status_code != 200:
-            raise Exception(f"TMDB API Error: {response.json()}")
+            if response.status_code != 200:
+                error_data = response.json()
+                print(f" Error response: {error_data}")  # Debug log
+                raise Exception(f"TMDB API Error {response.status_code}: {error_data}")
 
-        return response.json()
+            data = response.json()
+            print(f" Success! Got {len(data.get('results', []))} results")  # Debug log
+            return data
+            
+        except requests.exceptions.RequestException as e:
+            print(f" Request failed: {str(e)}")  # Debug log
+            raise Exception(f"TMDB API Request failed: {str(e)}")
 
     # ===============================
     #           PUBLIC METHODS

@@ -29,6 +29,9 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 APPEND_SLASH=True
 
+#tell Django to use  custom User model
+AUTH_USER_MODEL = 'users.User' 
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True") == "True"  # Default to True if not set
@@ -46,6 +49,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework.authtoken",
     "movies",
     "users",
     "drf_yasg",
