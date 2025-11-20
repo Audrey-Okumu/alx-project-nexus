@@ -32,7 +32,7 @@ def trending_movies(request):
     movies_data = data.get("results", [])
 
     movies = []
-    for item in data:
+    for item in movies_data:
         movie, _ = Movie.objects.get_or_create(
             tmdb_id=item["id"],
             defaults={
@@ -139,8 +139,31 @@ def search_movies(request):
 def add_favorite(request, movie_id):
     try:
         user = request.user
-        movie = get_object_or_404(Movie, pk=movie_id)
+        
+        # Try to get movie from local database first
+        movie = Movie.objects.filter(id=movie_id).first()
+        
+        # If movie doesn't exist locally, fetch from TMDB
+        if not movie:
+            try:
+                # Fetch movie details from TMDB
+                tmdb_data = tmdb.get_movie_details(movie_id)
+                
+                # Create the movie in local database
+                movie, created = Movie.objects.get_or_create(
+                    tmdb_id=tmdb_data["id"],
+                    defaults={
+                        "title": tmdb_data.get("title"),
+                        "overview": tmdb_data.get("overview", ""),
+                        "poster_url": build_poster_url(tmdb_data.get("poster_path")),
+                        "release_date": tmdb_data.get("release_date"),
+                        "genres": [genre["id"] for genre in tmdb_data.get("genres", [])],
+                    }
+                )
+            except Exception as e:
+                return Response({"error": f"Movie not found in TMDB: {str(e)}"}, status=404)
 
+        # add to favorites
         fav, created = FavoriteMovie.objects.get_or_create(
             user=user,
             movie=movie
