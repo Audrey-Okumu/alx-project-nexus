@@ -3,6 +3,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from .models import Movie, FavoriteMovie
 from .serializers import MovieSerializer, FavoriteMovieSerializer
@@ -19,6 +21,19 @@ def build_poster_url(poster_path):
     return None
 
 #Get Trending Movies (cached + auto-save to DB)
+
+@swagger_auto_schema(
+    method='get',
+    operation_summary="Get trending movies",
+    operation_description="Retrieve currently trending movies from TMDB (cached for 1 hour)",
+    responses={
+        200: openapi.Response(
+            description="List of trending movies",
+            schema=MovieSerializer(many=True)
+        ),
+        500: openapi.Response(description="TMDB API error")
+    }
+)
 
 @api_view(["GET"])
 def trending_movies(request):
@@ -52,6 +67,29 @@ def trending_movies(request):
         return Response({"error": f"Failed to fetch trending movies: {str(e)}"}, status=500)
 
 # Get Movie Recommendations
+
+@swagger_auto_schema(
+    method='get',
+    operation_summary="Get movie recommendations",
+    operation_description="Get recommended movies based on a specific movie",
+    manual_parameters=[
+        openapi.Parameter(
+            'movie_id', openapi.IN_PATH, 
+            description="TMDB Movie ID", 
+            type=openapi.TYPE_INTEGER,
+            required=True
+        )
+    ],
+    responses={
+        200: openapi.Response(
+            description="List of recommended movies",
+            schema=MovieSerializer(many=True)
+        ),
+        404: openapi.Response(description="Movie not found"),
+        500: openapi.Response(description="TMDB API error")
+    }
+)
+
 @api_view(["GET"])
 def recommended_movies(request, movie_id):
     try:
@@ -78,6 +116,26 @@ def recommended_movies(request, movie_id):
         return Response({"error": f"Failed to fetch recommendations: {str(e)}"}, status=500)
 
 # Get Movie Details
+
+@swagger_auto_schema(
+    method='get',
+    operation_summary="Get movie details",
+    operation_description="Get detailed information about a specific movie",
+    manual_parameters=[
+        openapi.Parameter(
+            'movie_id', openapi.IN_PATH, 
+            description="TMDB Movie ID", 
+            type=openapi.TYPE_INTEGER,
+            required=True
+        )
+    ],
+    responses={
+        200: MovieSerializer,
+        404: openapi.Response(description="Movie not found"),
+        500: openapi.Response(description="TMDB API error")
+    }
+)
+
 @api_view(["GET"])
 def movie_details(request, movie_id):
     try:
@@ -104,6 +162,29 @@ def movie_details(request, movie_id):
         return Response({"error": f"Failed to fetch movie details: {str(e)}"}, status=500)
 
 # Search Movies
+
+@swagger_auto_schema(
+    method='get',
+    operation_summary="Search movies",
+    operation_description="Search for movies by title",
+    manual_parameters=[
+        openapi.Parameter(
+            'query', openapi.IN_QUERY, 
+            description="Search query", 
+            type=openapi.TYPE_STRING,
+            required=True
+        )
+    ],
+    responses={
+        200: openapi.Response(
+            description="Search results",
+            schema=MovieSerializer(many=True)
+        ),
+        400: openapi.Response(description="Missing query parameter"),
+        500: openapi.Response(description="TMDB API error")
+    }
+)
+
 @api_view(["GET"])
 def search_movies(request):
     try:
@@ -134,6 +215,28 @@ def search_movies(request):
         return Response({"error": f"Search failed: {str(e)}"}, status=500)
 
 # Add to favorites
+
+@swagger_auto_schema(
+    method='post',
+    operation_summary="Add movie to favorites",
+    operation_description="Add a movie to user's favorites list",
+    manual_parameters=[
+        openapi.Parameter(
+            'movie_id', openapi.IN_PATH, 
+            description="Movie ID", 
+            type=openapi.TYPE_INTEGER,
+            required=True
+        )
+    ],
+    responses={
+        201: FavoriteMovieSerializer,
+        400: openapi.Response(description="Movie already in favorites"),
+        401: openapi.Response(description="Authentication required"),
+        404: openapi.Response(description="Movie not found"),
+        500: openapi.Response(description="Internal server error")
+    }
+)
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def add_favorite(request, movie_id):
@@ -178,6 +281,20 @@ def add_favorite(request, movie_id):
         return Response({"error": f"Failed to add favorite: {str(e)}"}, status=500)
 
 # List favorite movies
+
+@swagger_auto_schema(
+    method='get',
+    operation_summary="List favorite movies",
+    operation_description="Get user's list of favorite movies",
+    responses={
+        200: openapi.Response(
+            description="List of favorite movies",
+            schema=FavoriteMovieSerializer(many=True)
+        ),
+        401: openapi.Response(description="Authentication required")
+    }
+)
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_favorites(request):
@@ -189,6 +306,33 @@ def list_favorites(request):
         return Response({"error": f"Failed to fetch favorites: {str(e)}"}, status=500)
 
 # Remove from favorites
+
+@swagger_auto_schema(
+    method='delete',
+    operation_summary="Remove movie from favorites",
+    operation_description="Remove a movie from user's favorites list",
+    manual_parameters=[
+        openapi.Parameter(
+            'movie_id', openapi.IN_PATH, 
+            description="Movie ID", 
+            type=openapi.TYPE_INTEGER,
+            required=True
+        )
+    ],
+    responses={
+        200: openapi.Response(
+            description="Success response",
+            examples={
+                "application/json": {
+                    "message": "Removed from favorites"
+                }
+            }
+        ),
+        401: openapi.Response(description="Authentication required"),
+        404: openapi.Response(description="Movie not found in favorites")
+    }
+)
+
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def remove_favorite(request, movie_id):
