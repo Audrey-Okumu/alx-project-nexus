@@ -1,6 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
@@ -36,6 +36,7 @@ def build_poster_url(poster_path):
 )
 
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def trending_movies(request):
   try:
     cached = cache.get("trending_movies")  #check cache
@@ -91,6 +92,7 @@ def trending_movies(request):
 )
 
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def recommended_movies(request, movie_id):
     try:
         data = tmdb.get_recommended(movie_id)
@@ -137,6 +139,7 @@ def recommended_movies(request, movie_id):
 )
 
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def movie_details(request, movie_id):
     try:
         # Try to get from database first
@@ -186,6 +189,7 @@ def movie_details(request, movie_id):
 )
 
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def search_movies(request):
     try:
         query = request.GET.get('query', '').strip()
