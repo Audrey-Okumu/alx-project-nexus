@@ -117,16 +117,17 @@ TEMPLATES = [
 WSGI_APPLICATION = "movie_backend.wsgi.application"
 
 # Database configuration
-# Use Railway's DATABASE_URL if available, otherwise use local PostgreSQL
+#Always use DATABASE_URL on Railway
 if 'DATABASE_URL' in os.environ:
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.getenv('DATABASE_URL'),
+            default=os.environ['DATABASE_URL'],
             conn_max_age=600,
             conn_health_checks=True,
         )
     }
 else:
+    # Only use local settings if not on Railway
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -171,7 +172,7 @@ if 'REDIS_URL' in os.environ:
             "LOCATION": os.getenv('REDIS_URL'),
             "OPTIONS": {
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
-                "SSL_CERT_REQS": None,  # Important for Railway Redis
+                "SSL_CERT_REQS": None,  #for Railway Redis
             }
         }
     }
