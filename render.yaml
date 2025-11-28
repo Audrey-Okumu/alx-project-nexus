@@ -1,3 +1,12 @@
+databases:
+  - name: movie-backend-db
+    databaseName: movie_backend
+    plan: free
+
+redis:
+  - name: movie-backend-redis
+    plan: free
+
 services:
   - type: web
     name: movie-backend
@@ -13,4 +22,3 @@ services:
         value: "false"
       - key: SECRET_KEY
         generateValue: true
-      
