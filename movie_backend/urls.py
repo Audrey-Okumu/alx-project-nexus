@@ -31,65 +31,107 @@ schema_view = get_schema_view(
     openapi.Info(
         title="Movie Backend API",
         default_version='v1',
-        description="Movie API with TMDB integration and JWT authentication",
+        description="""
+        Complete Movie API with TMDB integration, user authentication, and favorites management.
+        
+        ## Features
+        - **JWT Authentication** - Secure user authentication
+        - **TMDB Integration** - Real movie data from The Movie Database
+        - **User Preferences** - Personalized genre and language preferences
+        - **Favorites System** - Save and manage favorite movies
+        - **Search & Discovery** - Find movies and get recommendations
+        
+        ## Authentication
+        Use the `/api/token/` endpoint to get JWT tokens. Include the token in the Authorization header:
+        `Authorization: Bearer <your_access_token>`
+        """,
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
 )
 
-# Simple home page view
-def home_view(request):
+#  Custom Swagger UI view
+def custom_swagger_view(request):
     html = """
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Movie Backend API</title>
+        <title>Movie Backend API - Swagger UI</title>
+        <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@3.52.5/swagger-ui.css">
         <style>
-            body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
-            .container { text-align: center; }
-            .btn { display: inline-block; padding: 10px 20px; margin: 10px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
-            .api-list { text-align: left; margin: 30px 0; }
-            .endpoint { background: #f8f9fa; padding: 10px; margin: 5px 0; border-radius: 5px; }
+            html { box-sizing: border-box; overflow-y: scroll; }
+            *, *:before, *:after { box-sizing: inherit; }
+            body { margin: 0; background: #fafafa; }
+            .swagger-ui .topbar { display: none; }
+            #swagger-ui { padding: 20px; }
+            .auth-container { margin: 20px; }
         </style>
     </head>
     <body>
-        <div class="container">
-            <h1> Movie Backend API</h1>
-            <p> Backend working fine!</p>
-            <p>Your Django API is successfully deployed on Railway.</p>
-            
-            <div class="api-list">
-                <h3> Available Endpoints:</h3>
-                <div class="endpoint"><strong>GET</strong> /api/movies/trending/ - Trending movies</div>
-                <div class="endpoint"><strong>GET</strong> /api/movies/search/?query=inception - Search movies</div>
-                <div class="endpoint"><strong>GET</strong> /api/movies/123/ - Movie details</div>
-                <div class="endpoint"><strong>POST</strong> /api/users/register/ - Register user</div>
-                <div class="endpoint"><strong>POST</strong> /api/token/ - Login & get JWT tokens</div>
-            </div>
-            
-            <div>
-                <a href="/swagger/" class="btn">View Swagger Documentation</a>
-                <a href="/api/movies/trending/" class="btn">Test Trending Movies</a>
-            </div>
-        </div>
+        <div id="swagger-ui"></div>
+        <script src="https://unpkg.com/swagger-ui-dist@3.52.5/swagger-ui-bundle.js"></script>
+        <script src="https://unpkg.com/swagger-ui-dist@3.52.5/swagger-ui-standalone-preset.js"></script>
+        <script>
+        window.onload = function() {
+            try {
+                const ui = SwaggerUIBundle({
+                    url: '/swagger.json',
+                    dom_id: '#swagger-ui',
+                    deepLinking: true,
+                    presets: [
+                        SwaggerUIBundle.presets.apis,
+                        SwaggerUIStandalonePreset
+                    ],
+                    plugins: [
+                        SwaggerUIBundle.plugins.DownloadUrl
+                    ],
+                    layout: "StandaloneLayout",
+                    validatorUrl: null,
+                    displayRequestDuration: true,
+                    docExpansion: 'none',
+                    // Add request interceptor to ensure Authorization header is sent
+                    requestInterceptor: (request) => {
+                        // Ensure Authorization header is properly formatted
+                        if (request.headers.Authorization && !request.headers.Authorization.startsWith('Bearer ')) {
+                            request.headers.Authorization = 'Bearer ' + request.headers.Authorization;
+                        }
+                        return request;
+                    }
+                });
+                
+                // Add authorization header to all requests
+                ui.getConfigs().requestInterceptor = function(request) {
+                    if (request.headers.Authorization && !request.headers.Authorization.startsWith('Bearer ')) {
+                        request.headers.Authorization = 'Bearer ' + request.headers.Authorization;
+                    }
+                    return request;
+                };
+                
+                console.log('Swagger UI loaded successfully');
+            } catch (error) {
+                console.error('Swagger UI error:', error);
+                document.getElementById('swagger-ui').innerHTML = 
+                    '<h1>Error loading Swagger UI</h1><p>' + error.message + '</p>';
+            }
+        };
+        </script>
     </body>
     </html>
     """
     return HttpResponse(html)
 
 urlpatterns = [
-    # Home page - Simple HTML page
-    path('', home_view, name='home'),
+    # Home page - Fixed Custom Swagger UI
+    path('', custom_swagger_view),
     
-    # Swagger URLs - Use DRF Yasg's built-in view
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    # Alternative paths
+    path('swagger/', custom_swagger_view),
     path('swagger.json', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     
     # Admin
     path('admin/', admin.site.urls),
     
-    # API Endpoints 
+    # API Endpoints
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/users/', include('users.urls')),
