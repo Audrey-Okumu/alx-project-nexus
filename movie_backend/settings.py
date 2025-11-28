@@ -181,6 +181,13 @@ else:
         "https://*.up.railway.app",
     ]
 
+# CSRF and CORS settings for Railway
+CSRF_TRUSTED_ORIGINS = [
+    'https://movie-backend.up.railway.app',
+    'https://*.up.railway.app',
+]
+
+
 # Swagger Settings
 SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
@@ -196,6 +203,7 @@ SWAGGER_SETTINGS = {
         {'Bearer': []}
     ],
     'DEFAULT_AUTO_SCHEMA_CLASS': 'drf_yasg.inspectors.SwaggerAutoSchema',
+    'VALIDATOR_URL': None,
 }
 
 REDOC_SETTINGS = {
@@ -241,3 +249,29 @@ if not DEBUG:
             'level': 'INFO',
         },
     }
+
+
+# Railway uses port 8080 and specific environment variables
+PORT = os.getenv('PORT', '8000')
+
+# CSRF and CORS settings for Railway
+CSRF_TRUSTED_ORIGINS = [
+    'https://movie-backend.up.railway.app',
+    'https://*.up.railway.app',
+]
+
+# Ensure Swagger static files work
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'JWT Authorization header using the Bearer scheme. Example: "Bearer {token}"',
+        }
+    },
+    'SECURITY_REQUIREMENTS': [{'Bearer': []}],
+    'DEFAULT_AUTO_SCHEMA_CLASS': 'drf_yasg.inspectors.SwaggerAutoSchema',
+    'VALIDATOR_URL': None,  # Disable schema validator
+}
