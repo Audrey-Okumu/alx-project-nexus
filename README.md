@@ -81,7 +81,7 @@ SIMPLE_JWT_SECRET_KEY=your-jwt-secret-key-here
 
 ##  ERD DIAGRAM REPRESENTATION FOR THE BACKEND MOVIE RECOMMENDATION APP
 
-![Backend movie recommendation app erd diagram](images/movie_backend.png)
+![Backend movie recommendation app erd diagram](movie_backend.png)
 
 
 
