@@ -79,6 +79,35 @@ SIMPLE_JWT_SECRET_KEY=your-jwt-secret-key-here
    ```
 
 
+##  ERD DIAGRAM REPRESENTATION FOR THE BACKEND MOVIE RECOMMENDATION APP
+
+![Backend movie recommendation app erd diagram](images/movie_backend.png)
+
+
+
+### Relationships
+
+
+1. User → FavouriteMovie (1:N)
+   
+Each user can have many favourite movies
+
+Each favourite movie record belongs to one user
+
+
+2. User → UserPreference (1:N)
+3. 
+A user can have multiple preferences
+
+Each preference is linked to one user
+
+
+3. FavouriteMovie → Movie (N:1)
+   
+Each favourite movie record points to one movie
+
+A movie can be the favourite for many users
+
 
 
 
