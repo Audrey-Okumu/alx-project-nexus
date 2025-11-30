@@ -201,13 +201,26 @@ def search_movies(request):
 
         movies = []
         for item in movies_data:
+            # Handle release_date safely
+            release_date_str = item.get("release_date")
+            release_date = None
+            
+            if release_date_str:  # Check if not empty string
+                try:
+                    # Parse the date string to validate it
+                    from datetime import datetime
+                    release_date = datetime.strptime(release_date_str, '%Y-%m-%d').date()
+                except (ValueError, TypeError):
+                    # If date is invalid, set to None
+                    release_date = None
+
             movie, _ = Movie.objects.get_or_create(
                 tmdb_id=item["id"],
                 defaults={
                     "title": item.get("title"),
                     "overview": item.get("overview", ""),
-                    "poster_url": build_poster_url(item.get("poster_path")),  # ✅ FIXED
-                    "release_date": item.get("release_date"),
+                    "poster_url": build_poster_url(item.get("poster_path")),
+                    "release_date": release_date,  
                     "genres": item.get("genre_ids", []),
                 }
             )
@@ -217,7 +230,6 @@ def search_movies(request):
     
     except Exception as e:
         return Response({"error": f"Search failed: {str(e)}"}, status=500)
-
 # Add to favorites
 
 @swagger_auto_schema(
