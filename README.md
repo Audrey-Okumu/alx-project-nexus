@@ -96,7 +96,7 @@ Each favourite movie record belongs to one user
 
 
 2. User → UserPreference (1:N)
-3. 
+
 A user can have multiple preferences
 
 Each preference is linked to one user
