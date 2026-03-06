@@ -36,7 +36,7 @@ A powerful Django REST Framework API for movie discovery, user management, and p
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd movie_backend
+   cd alx-project-nexus
    ```
 
 2. **Create virtual environment**
